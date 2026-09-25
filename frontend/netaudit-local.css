@@ -1,4 +1,5 @@
 /* NetAudit AI local utility CSS — generated to make the supplied UI work offline. */
+@font-face{font-family:"Font Awesome 6 Free";font-style:normal;font-weight:900;font-display:block;src:url("assets/webfonts/fa-solid-900.woff2") format("woff2"),url("assets/webfonts/fa-solid-900.ttf") format("truetype")}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -280,3 +281,5 @@ pre,code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monos
 .mt-0\.5{margin-top:.125rem}.mb-0\.5{margin-bottom:.125rem}
 .divide-slate-100>*+*{border-top-color:#f1f5f9}.divide-slate-200>*+*{border-top-color:#e2e8f0}
 @media print{header,nav,.tab-content:not(#view-report-view){display:none!important}.tab-content#view-report-view{display:block!important}.shadow-lg,.shadow-md,.shadow-sm,.shadow{box-shadow:none!important}.bg-slate-100{background:#fff!important}}
+
+.local-icon{font-family:"Segoe UI Symbol","Segoe UI",Arial,sans-serif!important;font-style:normal!important;font-weight:700!important;line-height:1!important;display:inline-block!important;min-width:1em;text-align:center;}

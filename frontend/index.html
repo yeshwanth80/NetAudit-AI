@@ -1095,5 +1095,40 @@ set deviceconfig system update-schedule threats recurring daily`,
       document.getElementById('dagCliOutput').innerText = data.dag_runbook || document.getElementById('dagCliOutput').innerText;
     }
   </script>
+
+<script>
+/* Local icon fallback: removes the browser/font dependency that can render Font Awesome as □. */
+(function(){
+  const ICONS={
+    'fa-shield-halved':'◈','fa-play':'▶','fa-network-wired':'⌁','fa-book-open':'▤','fa-diagram-project':'⌘',
+    'fa-clock-rotate-left':'↶','fa-file-pdf':'▣','fa-terminal':'>_','fa-server':'▣','fa-shield-virus':'◉',
+    'fa-lock':'🔒','fa-check':'✓','fa-triangle-exclamation':'⚠','fa-cloud-arrow-up':'↑','fa-file-lines':'▤',
+    'fa-circle-question':'?','fa-key':'⚿','fa-ban':'⊘','fa-circle-check':'✓','fa-rotate-left':'↶',
+    'fa-copy':'⧉','fa-chart-line':'↗','fa-check-double':'✓✓','fa-spinner':'◌','fa-circle-xmark':'✕',
+    'fa-print':'▤'
+  };
+  function replaceIcons(root=document){
+    root.querySelectorAll('i.fa-solid').forEach(el=>{
+      const key=[...el.classList].find(c=>ICONS[c]);
+      if(!key || el.dataset.iconFixed) return;
+      const span=document.createElement('span');
+      span.className=el.className.replace(/\bfa-solid\b/,'').trim()+' local-icon';
+      span.textContent=ICONS[key];
+      span.setAttribute('aria-hidden','true');
+      span.dataset.iconFixed='1';
+      span.style.fontFamily='"Segoe UI Symbol","Segoe UI",Arial,sans-serif';
+      span.style.fontStyle='normal';
+      span.style.fontWeight='700';
+      span.style.lineHeight='1';
+      span.style.display='inline-block';
+      span.style.textAlign='center';
+      el.replaceWith(span);
+    });
+  }
+  replaceIcons();
+  new MutationObserver(muts=>muts.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1) replaceIcons(n)}))).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
 </body>
 </html>
