@@ -1,0 +1,21 @@
+Netaudit AI — SAME UI, LOCAL/OFFLINE ASSETS, WORKING BACKEND
+
+1. Extract the ZIP to a normal Windows folder.
+2. Double-click RUN_NETAUDIT_AI.bat.
+3. The launcher creates backend\.venv if needed AND checks whether FastAPI/Uvicorn are actually installed.
+4. If FastAPI is missing from an existing .venv, it installs the requirements automatically.
+5. Wait for Chrome to open:
+   http://127.0.0.1:3000/index.html
+6. Use the vendor buttons and Run Audit / Live Backend Audit.
+7. The FastAPI backend runs at http://127.0.0.1:8000.
+8. The frontend no longer opens as file:///... and no Tailwind or Font Awesome CDN is required.
+9. Use STOP_NETAUDIT_AI.bat when finished.
+
+If dependency installation needs to be retried manually, double-click FIX_BACKEND_DEPENDENCIES.bat.
+
+Requirements:
+- Windows
+- Python 3.10+ available as `py -3`
+- Internet access only for the first dependency installation (FastAPI/Uvicorn).
+
+The supplied UI layout/content is preserved; local CSS and local Font Awesome assets are bundled so the page renders without external CDN dependencies.

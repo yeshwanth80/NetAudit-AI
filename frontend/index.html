@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetAudit AI — Autonomous Multi-Vendor Network Compliance & DAG Remediation Engine</title>
+  <!-- Local UI assets: no CDN dependency -->
+  <link rel="stylesheet" href="./assets/fontawesome-all.min.css">
+  <link rel="stylesheet" href="./netaudit-local.css">
+  <style>body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; } pre, code { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace; }</style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- TOP SOVEREIGN AIR-GAP STATUS BAR -->
+  <header class="bg-brand-dark text-white border-b border-slate-700/60 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-xl shadow-md shadow-blue-500/30">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">NetAudit AI</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-medium">SIH26155</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-medium">NCIIPC-CII Aligned</span>
+          </div>
+          <p class="text-xs text-slate-400">Autonomous Multi-Vendor Compliance & DAG Remediation Engine</p>
+        </div>
+      </div>
+
+      <!-- Center Air-Gap Badge -->
+      <div class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-md bg-slate-900 border border-slate-700 text-xs">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span class="text-slate-300 font-mono">ENCLAVE: 100% Air-Gapped Localhost</span>
+        <span class="text-slate-500">|</span>
+        <span class="text-emerald-400 font-semibold">Zero WAN Leakage</span>
+      </div>
+
+      <!-- Right Role Switcher -->
+      <div class="flex items-center space-x-2">
+        <label class="text-xs text-slate-400 font-medium hidden sm:inline">Role View:</label>
+        <select id="roleSelector" onchange="switchRole(this.value)" class="bg-slate-800 text-white text-xs font-semibold rounded-lg px-3 py-1.5 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="engineer">Network Engineer (CLI & Runbooks)</option>
+          <option value="soc">SOC Analyst (Triage & Evidence)</option>
+          <option value="ciso">CISO (Strategic Risk & Governance)</option>
+        </select>
+        <button onclick="triggerFullAudit()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-play"></i>
+          <span>Run Audit</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 text-sm font-medium">
+      <button onclick="showTab('audit-view')" id="tab-audit-view" class="tab-btn py-3 text-blue-600 border-b-2 border-blue-600 font-semibold flex items-center space-x-2">
+        <i class="fa-solid fa-network-wired"></i>
+        <span>Pipeline & Audit Console</span>
+      </button>
+      <button onclick="showTab('rag-view')" id="tab-rag-view" class="tab-btn py-3 text-slate-500 hover:text-slate-700 flex items-center space-x-2">
+        <i class="fa-solid fa-book-open"></i>
+        <span>BYOD Manual RAG & Active Learning</span>
+      </button>
+      <button onclick="showTab('dag-view')" id="tab-dag-view" class="tab-btn py-3 text-slate-500 hover:text-slate-700 flex items-center space-x-2">
+        <i class="fa-solid fa-diagram-project"></i>
+        <span>Lockout-Safe DAG Remediation</span>
+      </button>
+      <button onclick="showTab('drift-view')" id="tab-drift-view" class="tab-btn py-3 text-slate-500 hover:text-slate-700 flex items-center space-x-2">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Temporal Drift Analytics</span>
+      </button>
+      <button onclick="showTab('report-view')" id="tab-report-view" class="tab-btn py-3 text-slate-500 hover:text-slate-700 flex items-center space-x-2">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span>Single-Device Audit PDF Certificate</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- ROLE HERO BANNER (Changes dynamically based on selector) -->
+    <div id="roleBanner" class="mb-6 p-4 rounded-xl bg-gradient-to-r from-brand-navy to-slate-900 text-white shadow-sm border border-slate-800 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <div id="roleIcon" class="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 text-2xl">
+          <i class="fa-solid fa-terminal"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 id="roleTitle" class="text-base font-bold text-white">Network Engineer Persona Active</h2>
+            <span id="roleBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-mono">Micro-Level CLI & Evidence</span>
+          </div>
+          <p id="roleDesc" class="text-xs text-slate-300 mt-0.5">Inspecting hierarchical AST tokens, line-level CIS/NIST evidence provenance, and executing dependency-ordered DAG remediation runbooks.</p>
+        </div>
+      </div>
+      <div class="hidden lg:flex items-center space-x-6 text-right font-mono text-xs">
+        <div>
+          <span class="text-slate-400 block">Fleet Devices</span>
+          <span class="text-white font-bold text-base">28 Active</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block">Avg Security Index</span>
+          <span class="text-emerald-400 font-bold text-base">72 / 100</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block">Active Lockout Hazards</span>
+          <span class="text-amber-400 font-bold text-base">0 Safe</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: PIPELINE & AUDIT CONSOLE -->
+    <!-- ========================================================================= -->
+    <section id="view-audit-view" class="tab-content space-y-6">
+      
+      <!-- STEP 1: CONFIG SELECTOR & AST DE-NESTER -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Vendor Sample Ingest -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+              <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs">1</span>
+              <span>Input Configuration</span>
+            </h3>
+            <span class="text-[11px] text-slate-400 font-mono">Multi-Vendor Ingest</span>
+          </div>
+          
+          <div class="space-y-3 mb-4">
+            <label class="text-xs font-semibold text-slate-600 block">Select Sample Target Network Device:</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="loadVendorSample('cisco')" id="btn-sample-cisco" class="vendor-btn px-2.5 py-2 rounded-lg text-xs font-semibold border border-blue-600 bg-blue-50 text-blue-700 flex flex-col items-center">
+                <i class="fa-solid fa-server mb-1"></i>
+                <span>Cisco IOS-XE</span>
+              </button>
+              <button onclick="loadVendorSample('fortinet')" id="btn-sample-fortinet" class="vendor-btn px-2.5 py-2 rounded-lg text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 flex flex-col items-center">
+                <i class="fa-solid fa-shield-virus mb-1"></i>
+                <span>Fortinet FortiOS</span>
+              </button>
+              <button onclick="loadVendorSample('paloalto')" id="btn-sample-paloalto" class="vendor-btn px-2.5 py-2 rounded-lg text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 flex flex-col items-center">
+                <i class="fa-solid fa-lock mb-1"></i>
+                <span>Palo Alto PAN-OS</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col">
+            <div class="flex justify-between items-center text-xs text-slate-500 mb-1">
+              <span>Raw Running Configuration:</span>
+              <span id="cfgLinesBadge" class="font-mono text-[11px] text-blue-600">Line count: 32</span>
+            </div>
+            <textarea id="rawConfigEditor" class="custom-scroll w-full flex-1 min-h-[220px] p-3 text-xs font-mono bg-slate-900 text-emerald-400 rounded-lg border border-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Middle: AST Indentation De-Nester -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+              <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs">2</span>
+              <span>Indentation AST De-Nester</span>
+            </h3>
+            <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-medium">Tree Scoped</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-2">Preserves hierarchical block scope across firmware updates, bypassing brittle regex.</p>
+          <div class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-3 custom-scroll overflow-y-auto max-h-[300px]">
+            <pre id="astTreeViewer" class="text-[11px] text-slate-800 font-mono leading-relaxed whitespace-pre"></pre>
+          </div>
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Parent-Child Scopes: <strong class="text-slate-800" id="astScopesCount">4 Identified</strong></span>
+            <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-check"></i> Zero regex drift</span>
+          </div>
+        </div>
+
+        <!-- Right: IETF YANG Unified Schema Normalizer -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+              <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs">3</span>
+              <span>Normalized IETF YANG JSON</span>
+            </h3>
+            <span class="text-[11px] px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono font-medium">RFC 7950 Model</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-2">Vendor-agnostic baseline JSON schema ingested deterministically by Open Policy Agent.</p>
+          <div class="flex-1 bg-slate-900 border border-slate-800 rounded-lg p-3 custom-scroll overflow-y-auto max-h-[300px]">
+            <pre id="yangJsonViewer" class="text-[11px] text-cyan-300 font-mono leading-relaxed whitespace-pre"></pre>
+          </div>
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Canonical Parameters: <strong class="text-slate-800" id="yangKeyCount">9 Normalized</strong></span>
+            <span class="text-blue-600 font-semibold font-mono">JSON Validated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: DETERMINISTIC OPA AUDIT RESULTS & SCORECARD -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="font-bold text-slate-900 text-base">Deterministic OPA/Rego Compliance Findings</h3>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">100% Mathematical Proof</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Audited against CIS Benchmarks, NIST SP 800-53 Rev. 5, DISA STIGs, and NCIIPC CII Mandates.</p>
+          </div>
+          
+          <div class="flex items-center space-x-4">
+            <button onclick="runLiveAudit()" class="bg-brand-navy hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-server"></i><span>Live Backend Audit</span>
+            </button>
+            <!-- Score Card Mini -->
+            <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400 block font-semibold">SECURITY POSTURE INDEX</span>
+                <span id="spiScoreDisplay" class="text-2xl font-black text-rose-600 leading-tight">60 / 100</span>
+              </div>
+              <div class="w-10 h-10 rounded-full bg-rose-50 border-2 border-rose-500 flex items-center justify-center font-bold text-rose-600 text-sm">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Findings Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                <th class="py-3 px-4">Status & Rule ID</th>
+                <th class="py-3 px-4">Standard & Framework</th>
+                <th class="py-3 px-4">Line-Level Evidence Provenance</th>
+                <th class="py-3 px-4">Severity & Penalty</th>
+                <th class="py-3 px-4">GenAI Risk Contextualization</th>
+                <th class="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="auditFindingsTbody" class="divide-y divide-slate-100">
+              <!-- Dynamically populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: BYOD MANUAL RAG & ACTIVE LEARNING -->
+    <!-- ========================================================================= -->
+    <section id="view-rag-view" class="tab-content hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- BYOD PDF Manual Upload Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-slate-900 font-bold text-base mb-1">
+              <i class="fa-solid fa-file-pdf text-rose-600"></i>
+              <h3>Bring Your Own Documentation (BYOD Manual RAG)</h3>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">When auditing new or proprietary firmware, upload the vendor CLI PDF manual. NetAudit AI indexes syntax vectors locally via Sentence-Transformers without cloud leakage.</p>
+
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-500 transition bg-slate-50 cursor-pointer" onclick="simulatePdfUpload()">
+              <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-600 mb-2"></i>
+              <h4 class="text-xs font-bold text-slate-800">Upload Vendor CLI Technical Reference PDF</h4>
+              <p class="text-[11px] text-slate-500 mt-1">Cisco IOS-XE 17.x, FortiOS 7.4.x, or White-box Switch Manual (Max 150MB)</p>
+              <span class="inline-block mt-3 px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-700 shadow-sm">
+                <i class="fa-solid fa-file-lines text-slate-400 mr-1"></i> Click to Simulate Manual Indexing
+              </span>
+            </div>
+
+            <!-- Indexing Status Box -->
+            <div id="ragIndexStatus" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs space-y-1">
+              <div class="flex justify-between items-center font-semibold text-blue-900">
+                <span>Active Vector Store: ChromaDB (Local SQLite)</span>
+                <span class="text-emerald-600 font-mono">Indexed: 1,420 CLI Pages</span>
+              </div>
+              <p class="text-[11px] text-blue-700">Model: <code class="font-mono bg-blue-100 px-1 rounded">sentence-transformers/all-MiniLM-L6-v2</code> | Local CPU: 42ms/query</p>
+            </div>
+          </div>
+
+          <div class="mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+            <span><i class="fa-solid fa-lock text-emerald-500 mr-1"></i> Vector embeddings generated on local CPU; no cloud egress</span>
+            <span class="text-blue-600 font-medium">Memory: ~180MB RAM</span>
+          </div>
+        </div>
+
+        <!-- Active Learning Uncertainty Gate (<0.85 Threshold) -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center space-x-2 text-slate-900 font-bold text-base">
+                <i class="fa-solid fa-circle-question text-amber-500"></i>
+                <h3>Active Learning Uncertainty Gate (θ &lt; 0.85)</h3>
+              </div>
+              <span class="text-xs font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Unmapped Syntax</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">When semantic similarity falls below 0.85, NetAudit AI pauses automatic inference and prompts an administrator. 1-click binding persists heuristics dynamically without code redeployment.</p>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wide">Detected Unseen CLI Command:</span>
+                  <div class="font-mono text-xs font-bold text-slate-900 bg-white p-2 rounded border border-amber-200 mt-1">
+                    system defense-mode strict-quarantine
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[11px] text-slate-500 block">Cosine Similarity</span>
+                  <span class="font-mono font-bold text-amber-600 text-sm">0.74 (&lt; 0.85)</span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[11px] font-semibold text-slate-700 block mb-1">Proposed YANG Schema Binding:</span>
+                <select id="activeLearnSelect" class="w-full text-xs font-mono bg-white border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500">
+                  <option value="mgmt.firewall.quarantine_mode">mgmt.firewall.quarantine_mode (Boolean: true)</option>
+                  <option value="mgmt.ips.strict_inspection">mgmt.ips.strict_inspection (Boolean: true)</option>
+                  <option value="security.baseline.ignore">security.baseline.ignore (Vendor Diagnostic Only)</option>
+                </select>
+              </div>
+
+              <div class="p-2.5 bg-white rounded border border-slate-200 text-[11px] text-slate-600">
+                <strong class="text-slate-800">RAG Document Citation:</strong> Manual Page 412: <em>"Enables Layer 2 isolation for suspect management endpoints."</em>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs text-slate-500">Persists to local Redis/PostgreSQL registry</span>
+            <button onclick="confirmActiveLearning()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-check"></i>
+              <span>Confirm & Bind Schema (1-Click)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: LOCKOUT-SAFE DAG REMEDIATION -->
+    <!-- ========================================================================= -->
+    <section id="view-dag-view" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="font-bold text-slate-900 text-base">Directed Acyclic Graph (DAG) Remediation Planner</h3>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">Zero-Lockout Guarantee</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Enforces prerequisite execution dependencies. Disabling insecure Telnet is quarantined until active SSH listener reachability is cryptographically confirmed.</p>
+          </div>
+          <button onclick="executeDagRemediation()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center space-x-2">
+            <i class="fa-solid fa-play"></i>
+            <span>Simulate Safe DAG Execution</span>
+          </button>
+        </div>
+
+        <!-- DAG VISUAL PIPELINE FLOW -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 overflow-x-auto mb-6">
+          <div class="min-w-[700px] flex items-center justify-between relative">
+            
+            <!-- Node 1 -->
+            <div class="flex flex-col items-center text-center w-40">
+              <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/30 mb-2">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <span class="text-xs font-bold text-slate-800">Task 1: Generate Crypto</span>
+              <span class="text-[11px] text-slate-500">crypto key gen rsa 2048</span>
+              <span class="mt-1 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-mono">Step 1</span>
+            </div>
+
+            <!-- Connector -->
+            <div class="flex-1 h-1 bg-slate-300 mx-2 relative">
+              <div id="dag-prog-1" class="h-full bg-emerald-500 w-0 transition-all duration-500"></div>
+            </div>
+
+            <!-- Node 2 -->
+            <div class="flex flex-col items-center text-center w-40">
+              <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/30 mb-2">
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <span class="text-xs font-bold text-slate-800">Task 2: Enable SSH v2</span>
+              <span class="text-[11px] text-slate-500">ip ssh version 2</span>
+              <span class="mt-1 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-mono">Step 2</span>
+            </div>
+
+            <!-- Connector -->
+            <div class="flex-1 h-1 bg-slate-300 mx-2 relative">
+              <div id="dag-prog-2" class="h-full bg-emerald-500 w-0 transition-all duration-500"></div>
+            </div>
+
+            <!-- Node 3: Lockout Check Gate -->
+            <div class="flex flex-col items-center text-center w-44">
+              <div id="dagGateIcon" class="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/30 mb-2">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <span class="text-xs font-bold text-slate-800">Lockout-Safe Gate</span>
+              <span class="text-[11px] text-slate-500">Verify SSH Reachability</span>
+              <span class="mt-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-mono font-bold">Safety Checkpoint</span>
+            </div>
+
+            <!-- Connector -->
+            <div class="flex-1 h-1 bg-slate-300 mx-2 relative">
+              <div id="dag-prog-3" class="h-full bg-emerald-500 w-0 transition-all duration-500"></div>
+            </div>
+
+            <!-- Node 4 -->
+            <div class="flex flex-col items-center text-center w-40">
+              <div class="w-12 h-12 rounded-xl bg-slate-700 text-white flex items-center justify-center font-bold text-lg shadow-md mb-2">
+                <i class="fa-solid fa-ban"></i>
+              </div>
+              <span class="text-xs font-bold text-slate-800">Task 3: Disable Telnet</span>
+              <span class="text-[11px] text-slate-500">transport input ssh</span>
+              <span class="mt-1 px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px] font-mono">Step 3</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAG CLI Runbook Output -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-slate-800">Topologically Ordered Remediation Script:</span>
+              <span class="text-[11px] text-emerald-600 font-mono font-semibold"><i class="fa-solid fa-circle-check"></i> Rollback Armored</span>
+            </div>
+            <pre id="dagCliOutput" class="custom-scroll p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-lg border border-slate-800 overflow-x-auto leading-relaxed">
+! NetAudit AI Lockout-Safe Remediation Plan
+! Device: CORE-ROUTER-01 (Cisco IOS-XE)
+! Generated: 2026-09-25T14:32:00Z
+
+archive
+ path bootflash:/backup-config
+ exit
+archive config rollback-timer 5   ! Arm 5-minute auto-rollback checkpoint
+
+configure terminal
+ ! Task 1: Generate crypto RSA keys for secure administration
+ crypto key generate rsa modulus 2048
+ 
+ ! Task 2: Restrict to SSH Version 2
+ ip ssh version 2
+ 
+ ! [Lockout Gate Check Passed: In-Band SSH Active on TCP/22]
+ 
+ ! Task 3: Terminate insecure Telnet listener
+ line vty 0 4
+  transport input ssh
+  exec-timeout 10 0
+ exit
+
+! Task 4: Confirm rollback timer clearance
+archive config confirm</pre>
+          </div>
+
+          <!-- Rollback Safeguards Info -->
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 flex flex-col justify-between">
+            <div>
+              <h4 class="text-xs font-bold text-slate-900 mb-2 flex items-center space-x-2">
+                <i class="fa-solid fa-rotate-left text-blue-600"></i>
+                <span>Automated Vendor Rollback Safeguards</span>
+              </h4>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                In critical infrastructure environments, applying hardening configurations without rollbacks can sever management sessions. NetAudit AI wraps all commands in native hardware rollback timers:
+              </p>
+              <ul class="text-xs space-y-2 text-slate-700">
+                <li class="flex items-start space-x-2">
+                  <strong class="font-mono text-blue-600 w-32 shrink-0">Cisco IOS-XE:</strong>
+                  <span><code>archive config rollback-timer 5</code> (Auto-reverts in 300s unless confirmed)</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <strong class="font-mono text-blue-600 w-32 shrink-0">Juniper JunOS:</strong>
+                  <span><code>commit confirmed 5</code> (Reverts candidate configuration automatically)</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <strong class="font-mono text-blue-600 w-32 shrink-0">Fortinet FortiOS:</strong>
+                  <span><code>execute backup config flash</code> checkpoint prior to batch script execution</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+              <span>Status: <strong class="text-emerald-600">No human lockout hazards detected</strong></span>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('dagCliOutput').innerText); alert('Remediation runbook copied to clipboard!')" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fa-solid fa-copy mr-1"></i> Copy Runbook
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: TEMPORAL DRIFT ANALYTICS -->
+    <!-- ========================================================================= -->
+    <section id="view-drift-view" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Drift Overview -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-1 flex items-center space-x-2">
+            <i class="fa-solid fa-clock-rotate-left text-blue-600"></i>
+            <span>Temporal Drift Timeline</span>
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">Historical comparison of snapshots in PostgreSQL 16.</p>
+
+          <div class="space-y-3">
+            <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs cursor-pointer">
+              <div class="flex justify-between font-bold text-blue-900">
+                <span>Snapshot T₁ (Current Audit)</span>
+                <span class="text-rose-600">SPI: 60/100</span>
+              </div>
+              <span class="text-[11px] text-slate-500 font-mono">Today, 14:30 IST (4 Deviations)</span>
+            </div>
+
+            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs cursor-pointer hover:bg-slate-100">
+              <div class="flex justify-between font-semibold text-slate-800">
+                <span>Snapshot T₀ (Certified Golden)</span>
+                <span class="text-emerald-600 font-bold">SPI: 100/100</span>
+              </div>
+              <span class="text-[11px] text-slate-500 font-mono">14 Days Ago (Zero Defects)</span>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-200">
+            <span class="text-xs font-bold text-slate-800 block mb-2">Repeat Offender Violations:</span>
+            <div class="p-2.5 bg-rose-50 border border-rose-200 rounded text-xs text-rose-800">
+              <div class="font-bold flex items-center space-x-1">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Line 24: exec-timeout disabled</span>
+              </div>
+              <p class="text-[11px] text-rose-700 mt-1">Reverted 3 times by operators following scheduled reboots.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle & Right: Configuration Diff Viewer -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-slate-900 text-sm">Unified Configuration Diff (T₀ Golden vs T₁ Drift)</h3>
+            <span class="text-xs font-mono text-slate-500">CORE-ROUTER-01.cfg</span>
+          </div>
+
+          <div class="flex-1 bg-slate-900 rounded-lg p-4 font-mono text-xs overflow-x-auto custom-scroll leading-relaxed text-slate-300">
+            <div class="text-slate-500">@@ -14,10 +14,10 @@ line vty 0 4</div>
+            <div class="text-slate-400">  password 7 0822455B101009</div>
+            <div class="bg-rose-950/50 text-rose-300 px-1 rounded">-  transport input ssh</div>
+            <div class="bg-emerald-950/50 text-emerald-300 px-1 rounded">+  transport input telnet ssh  <span class="text-rose-400 font-bold">! DRIFT DETECTED (CIS 2.1.1 VIOLATION)</span></div>
+            <div class="bg-rose-950/50 text-rose-300 px-1 rounded">-  exec-timeout 10 0</div>
+            <div class="bg-emerald-950/50 text-emerald-300 px-1 rounded">+  no exec-timeout             <span class="text-rose-400 font-bold">! DRIFT DETECTED (CIS 2.1.2 VIOLATION)</span></div>
+            <div class="text-slate-400">  login local</div>
+            <div class="text-slate-400"> exit</div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+            <span>Drift Velocity: <strong class="text-rose-600">+2 High-Risk Regressions</strong></span>
+            <button onclick="showTab('dag-view')" class="text-blue-600 font-semibold hover:underline">
+              Remediate Diff via DAG &rarr;
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: SINGLE-DEVICE AUDIT PDF CERTIFICATE -->
+    <!-- ========================================================================= -->
+    <section id="view-report-view" class="tab-content hidden space-y-6">
+      
+      <!-- Printable Certificate Container -->
+      <div id="printableCertificate" class="bg-white rounded-xl shadow-lg border border-slate-300 p-8 max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-start border-b-2 border-brand-navy pb-4 mb-6">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-8 h-8 rounded bg-brand-navy text-white flex items-center justify-center font-bold text-lg">
+                <i class="fa-solid fa-shield-halved"></i>
+              </span>
+              <h2 class="text-xl font-black text-brand-navy tracking-tight">NATIONAL CRITICAL INFRASTRUCTURE AUDIT CERTIFICATE</h2>
+            </div>
+            <p class="text-xs text-slate-500 mt-1 font-mono">Issued under NCIIPC Conformity Assessment Framework (CAF) | SIH26155</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">CERTIFICATE FINGERPRINT</span>
+            <span class="text-xs font-mono font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+              SHA256: 7f83b165...9b4c
+            </span>
+          </div>
+        </div>
+
+        <!-- Meta Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 mb-6 text-xs">
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Target Device Hostname</span>
+            <span class="font-bold text-slate-900 font-mono" id="certHostname">CORE-ROUTER-01</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Hardware & OS</span>
+            <span class="font-bold text-slate-900 font-mono" id="certOs">Cisco IOS-XE 17.6.1a</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Audit Timestamp</span>
+            <span class="font-bold text-slate-900 font-mono">2026-09-25 14:32 IST</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Final Verdict</span>
+            <span class="font-bold text-rose-600 font-mono" id="certVerdict">NON-COMPLIANT (SPI: 60)</span>
+          </div>
+        </div>
+
+        <!-- Executive Summary of Findings -->
+        <div class="mb-6">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 border-b border-slate-200 pb-1">
+            Forensic Evidence Summary & Policy Violations
+          </h3>
+          <table class="w-full text-left text-xs border border-slate-200">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="p-2 border">Control ID</th>
+                <th class="p-2 border">Regulatory Standard</th>
+                <th class="p-2 border">Line Evidence</th>
+                <th class="p-2 border">Severity</th>
+              </tr>
+            </thead>
+            <tbody id="certFindingsTbody" class="divide-y divide-slate-200 font-mono text-[11px]">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Sign-off & Air-Gap Attestation -->
+        <div class="border-t border-slate-200 pt-4 flex justify-between items-end text-xs text-slate-500">
+          <div>
+            <p class="font-semibold text-slate-800">Deterministic Engine Attestation:</p>
+            <p class="text-[11px]">Evaluated locally via Open Policy Agent (Rego) with zero external LLM API dependencies.</p>
+          </div>
+          <div class="text-right">
+            <div class="w-36 border-b border-slate-400 pb-1 text-center font-serif text-slate-700 italic">NetAudit Sovereign Core</div>
+            <span class="text-[10px] uppercase tracking-wider block mt-1 text-slate-400">Cryptographic Seal</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-center space-x-4">
+        <button onclick="window.print()" class="bg-brand-navy hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow flex items-center space-x-2">
+          <i class="fa-solid fa-print"></i>
+          <span>Print / Export PDF Certificate</span>
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT PIPELINE ENGINE -->
+  <script>
+    // ==========================================
+    // 1. DATASETS & SAMPLES
+    // ==========================================
+    const SAMPLES = {
+      cisco: {
+        os: "Cisco IOS-XE 17.6.1a",
+        hostname: "CORE-ROUTER-01",
+        raw: `hostname CORE-ROUTER-01
+!
+service password-encryption
+no ip domain-lookup
+!
+username netadmin privilege 15 secret 9 $9$x9e8...
+!
+interface GigabitEthernet0/0/0
+ ip address 10.100.1.1 255.255.255.0
+ no shutdown
+!
+snmp-server community public RO
+!
+line con 0
+ exec-timeout 5 0
+ stopbits 1
+!
+line vty 0 4
+ transport input telnet ssh
+ no exec-timeout
+ login local
+!
+end`,
+        ast: `└── ROOT
+    ├── hostname: CORE-ROUTER-01
+    ├── service: password-encryption
+    ├── no: ip domain-lookup
+    ├── username: netadmin (privilege 15)
+    ├── interface: GigabitEthernet0/0/0
+    │   ├── ip address: 10.100.1.1 255.255.255.0
+    │   └── no shutdown
+    ├── snmp-server: community public RO
+    ├── line con 0
+    │   └── exec-timeout: 5 0
+    └── line vty 0 4
+        ├── transport input: telnet ssh  [DE-NESTED SCOPE]
+        ├── no exec-timeout              [DE-NESTED SCOPE]
+        └── login local`,
+        yang: {
+          "device_metadata": { "hostname": "CORE-ROUTER-01", "os": "cisco_iosxe" },
+          "management_plane": {
+            "ssh_enforced": false,
+            "telnet_disabled": false,
+            "session_timeout_seconds": 0,
+            "insecure_snmp_community": "public",
+            "password_encryption": true
+          }
+        },
+        violations: [
+          {
+            rule_id: "CIS-2.1.1",
+            standard: "CIS Cisco IOS-XE v4.1.0",
+            evidence: "Line 19: transport input telnet ssh",
+            severity: "HIGH",
+            penalty: "-20 Pts",
+            impact: "Exposes plaintext administrative credentials across intermediate Layer 2 segments."
+          },
+          {
+            rule_id: "CIS-2.1.2",
+            standard: "NIST SP 800-53 (AC-17)",
+            evidence: "Line 20: no exec-timeout",
+            severity: "HIGH",
+            penalty: "-10 Pts",
+            impact: "Leaves administrative VTY terminal sessions open indefinitely, allowing session hijacking."
+          },
+          {
+            rule_id: "DISA-STIG-004",
+            standard: "DISA Network STIG",
+            evidence: "Line 13: snmp-server community public RO",
+            severity: "MEDIUM",
+            penalty: "-10 Pts",
+            impact: "Default SNMP community string 'public' reveals internal network topology."
+          }
+        ]
+      },
+      fortinet: {
+        os: "Fortinet FortiOS 7.4.2",
+        hostname: "EDGE-FW-01",
+        raw: `config system global
+    set hostname "EDGE-FW-01"
+    set admintimeout 0
+    set admin-sport 8443
+    set admin-ssh-port 22
+end
+config system admin
+    edit "admin"
+        set accprofile "super_admin"
+        set vdom "root"
+    next
+end
+config system interface
+    edit "port1"
+        set ip 192.168.1.1 255.255.255.0
+        set allowaccess ping https ssh http
+    next
+end`,
+        ast: `└── ROOT
+    ├── config system global
+    │   ├── set hostname: EDGE-FW-01
+    │   ├── set admintimeout: 0      [DE-NESTED SCOPE]
+    │   └── set admin-sport: 8443
+    └── config system interface
+        └── edit port1
+            └── set allowaccess: ping https ssh http [DE-NESTED SCOPE]`,
+        yang: {
+          "device_metadata": { "hostname": "EDGE-FW-01", "os": "fortinet_fortios" },
+          "management_plane": {
+            "ssh_enforced": true,
+            "telnet_disabled": true,
+            "session_timeout_seconds": 0,
+            "http_admin_allowed": true
+          }
+        },
+        violations: [
+          {
+            rule_id: "CIS-FORTI-1.1",
+            standard: "CIS FortiOS Benchmark v7.0",
+            evidence: "Line 3: set admintimeout 0",
+            severity: "HIGH",
+            penalty: "-20 Pts",
+            impact: "Admin console timeout is disabled, violating maximum 10-minute idle session mandate."
+          },
+          {
+            rule_id: "NIST-AC-17",
+            standard: "NIST SP 800-53 (CM-7)",
+            evidence: "Line 15: set allowaccess ... http",
+            severity: "HIGH",
+            penalty: "-20 Pts",
+            impact: "Unencrypted HTTP management permitted on external interface port1."
+          }
+        ]
+      },
+      paloalto: {
+        os: "Palo Alto PAN-OS 10.2",
+        hostname: "DC-PERIMETER-PA",
+        raw: `set deviceconfig system hostname DC-PERIMETER-PA
+set deviceconfig system ip-address 10.0.0.1 netmask 255.255.255.0
+set deviceconfig system service disable-telnet
+set deviceconfig system service disable-http
+set deviceconfig system cli timeout 10
+set mgt-config users admin password ...
+set deviceconfig system update-schedule threats recurring daily`,
+        ast: `└── ROOT
+    ├── set deviceconfig system hostname DC-PERIMETER-PA
+    ├── set deviceconfig system service disable-telnet
+    ├── set deviceconfig system service disable-http
+    └── set deviceconfig system cli timeout 10`,
+        yang: {
+          "device_metadata": { "hostname": "DC-PERIMETER-PA", "os": "paloalto_panos" },
+          "management_plane": {
+            "ssh_enforced": true,
+            "telnet_disabled": true,
+            "session_timeout_seconds": 600,
+            "insecure_services_disabled": true
+          }
+        },
+        violations: []
+      }
+    };
+
+    let currentVendor = "cisco";
+
+    // ==========================================
+    // 2. INITIALIZATION
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadVendorSample('cisco');
+    });
+
+    function loadVendorSample(vendor) {
+      currentVendor = vendor;
+      const data = SAMPLES[vendor];
+      
+      // Update Button Styles
+      document.querySelectorAll('.vendor-btn').forEach(btn => {
+        btn.classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700');
+        btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600');
+      });
+      const activeBtn = document.getElementById(`btn-sample-${vendor}`);
+      activeBtn.classList.remove('border-slate-200', 'bg-white', 'text-slate-600');
+      activeBtn.classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700');
+
+      // Populate Input Views
+      document.getElementById('rawConfigEditor').value = data.raw;
+      document.getElementById('cfgLinesBadge').innerText = `Line count: ${data.raw.split('\n').length}`;
+      document.getElementById('astTreeViewer').innerText = data.ast;
+      document.getElementById('yangJsonViewer').innerText = JSON.stringify(data.yang, null, 2);
+
+      // Render Audit Findings
+      renderAuditFindings(data);
+    }
+
+    function renderAuditFindings(data) {
+      const tbody = document.getElementById('auditFindingsTbody');
+      const certTbody = document.getElementById('certFindingsTbody');
+      tbody.innerHTML = '';
+      certTbody.innerHTML = '';
+
+      let spi = 100;
+      if (data.violations.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="p-6 text-center text-emerald-600 font-bold bg-emerald-50">
+              <i class="fa-solid fa-circle-check text-2xl mb-1 block"></i>
+              100% COMPLIANT — Zero Policy Violations Detected across CIS, NIST, & DISA STIGs
+            </td>
+          </tr>
+        `;
+        certTbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="p-4 text-center text-emerald-700 font-bold">100% Fully Compliant. Zero defects identified.</td>
+          </tr>
+        `;
+        document.getElementById('spiScoreDisplay').innerText = "100 / 100";
+        document.getElementById('spiScoreDisplay').className = "text-2xl font-black text-emerald-600 leading-tight";
+        document.getElementById('certVerdict').innerText = "COMPLIANT (SPI: 100)";
+        document.getElementById('certVerdict').className = "font-bold text-emerald-600 font-mono";
+      } else {
+        data.violations.forEach((v) => {
+          const penaltyVal = parseInt(v.penalty.replace(/[^0-9]/g, ''));
+          spi -= penaltyVal;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50 transition";
+          tr.innerHTML = `
+            <td class="py-3 px-4 font-mono font-bold text-rose-600 flex items-center space-x-1.5">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>${v.rule_id}</span>
+            </td>
+            <td class="py-3 px-4 font-medium text-slate-700">${v.standard}</td>
+            <td class="py-3 px-4 font-mono text-[11px] text-slate-800 bg-slate-50/80 rounded border border-slate-100">${v.evidence}</td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold text-[10px]">${v.severity} (${v.penalty})</span>
+            </td>
+            <td class="py-3 px-4 text-slate-600 text-[11px]">${v.impact}</td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="showTab('dag-view')" class="text-blue-600 hover:text-blue-800 font-semibold text-xs">DAG Fix &rarr;</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+
+          // Cert Table
+          const certTr = document.createElement('tr');
+          certTr.innerHTML = `
+            <td class="p-2 border text-rose-600 font-bold">${v.rule_id}</td>
+            <td class="p-2 border text-slate-700">${v.standard}</td>
+            <td class="p-2 border text-slate-800">${v.evidence}</td>
+            <td class="p-2 border text-rose-600 font-bold">${v.severity}</td>
+          `;
+          certTbody.appendChild(certTr);
+        });
+
+        document.getElementById('spiScoreDisplay').innerText = `${spi} / 100`;
+        document.getElementById('spiScoreDisplay').className = "text-2xl font-black text-rose-600 leading-tight";
+        document.getElementById('certVerdict').innerText = `NON-COMPLIANT (SPI: ${spi})`;
+        document.getElementById('certVerdict').className = "font-bold text-rose-600 font-mono";
+      }
+
+      // Metadata on Cert
+      document.getElementById('certHostname').innerText = data.hostname;
+      document.getElementById('certOs').innerText = data.os;
+    }
+
+    // ==========================================
+    // 3. TAB CONTROLLER
+    // ==========================================
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'font-semibold');
+        btn.classList.add('text-slate-500');
+      });
+
+      document.getElementById(`view-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      activeBtn.classList.remove('text-slate-500');
+      activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'font-semibold');
+    }
+
+    // ==========================================
+    // 4. ROLE-BASED PERSONALIZATION SWITCHER
+    // ==========================================
+    function switchRole(role) {
+      const banner = document.getElementById('roleBanner');
+      const icon = document.getElementById('roleIcon');
+      const title = document.getElementById('roleTitle');
+      const badge = document.getElementById('roleBadge');
+      const desc = document.getElementById('roleDesc');
+
+      if (role === 'engineer') {
+        icon.innerHTML = '<i class="fa-solid fa-terminal"></i>';
+        title.innerText = 'Network Engineer Persona Active';
+        badge.innerText = 'Micro-Level CLI & Evidence';
+        desc.innerText = 'Inspecting hierarchical AST tokens, line-level CIS/NIST evidence provenance, and executing dependency-ordered DAG remediation runbooks.';
+      } else if (role === 'soc') {
+        icon.innerHTML = '<i class="fa-solid fa-shield-virus"></i>';
+        title.innerText = 'SOC Analyst Persona Active';
+        badge.innerText = 'Threat Surface & Triage';
+        desc.innerText = 'Analyzing active attack surfaces, plaintext credential exposures, CVE correlation, and repeat offender configuration patterns across operational shifts.';
+      } else if (role === 'ciso') {
+        icon.innerHTML = '<i class="fa-solid fa-chart-line"></i>';
+        title.innerText = 'CISO / Executive Persona Active';
+        badge.innerText = 'Macro Risk & Regulatory Index';
+        desc.innerText = 'Monitoring enterprise-wide compliance benchmarks (% CIS, % NIST SP 800-53, % NCIIPC), fleet-wide drift velocity, and financial risk exposure.';
+      }
+    }
+
+    // ==========================================
+    // 5. SIMULATIONS (DAG, RAG, ACTIVE LEARNING)
+    // ==========================================
+    const API_BASE = 'http://127.0.0.1:8000';
+
+    async function executeDagRemediation() {
+      const p1 = document.getElementById('dag-prog-1');
+      const p2 = document.getElementById('dag-prog-2');
+      const p3 = document.getElementById('dag-prog-3');
+      const gateIcon = document.getElementById('dagGateIcon');
+      p1.style.width = '0%'; p2.style.width = '0%'; p3.style.width = '0%';
+      gateIcon.className = "w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-md mb-2";
+      gateIcon.innerHTML = '<i class="fa-solid fa-shield-halved"></i>';
+
+      try {
+        const config = document.getElementById('rawConfigEditor').value;
+        const res = await fetch(`${API_BASE}/api/v1/dag/execute`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({vendor: currentVendor, config})
+        });
+        const result = await res.json();
+        const steps = result.steps || [];
+        steps.forEach((_, i) => setTimeout(() => {
+          if (i === 0) p1.style.width = '100%';
+          if (i === 1) p2.style.width = '100%';
+          if (i === 2) {
+            gateIcon.className = "w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-md mb-2 transition";
+            gateIcon.innerHTML = '<i class="fa-solid fa-check-double"></i>';
+          }
+          if (i >= 3) p3.style.width = '100%';
+        }, i * 450));
+        setTimeout(() => alert(result.message || 'Lockout-Safe DAG Remediation Completed!'), Math.max(1800, steps.length * 450));
+      } catch (e) {
+        alert('Backend is not running. Start RUN_NETAUDIT_AI.bat first.');
+      }
+    }
+
+    async function simulatePdfUpload() {
+      const statusBox = document.getElementById('ragIndexStatus');
+      statusBox.innerHTML = `
+        <div class="flex items-center space-x-2 text-blue-900 font-bold">
+          <i class="fa-solid fa-spinner fa-spin text-blue-600"></i>
+          <span>Indexing vendor documentation in the local backend...</span>
+        </div>
+        <div class="w-full bg-blue-200 h-1.5 rounded-full mt-2 overflow-hidden">
+          <div class="bg-blue-600 h-full w-full animate-pulse"></div>
+        </div>`;
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/rag/index`, {method:'POST'});
+        const data = await res.json();
+        statusBox.innerHTML = `
+          <div class="flex justify-between items-center font-semibold text-emerald-900">
+            <span><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> ${data.message}</span>
+            <span class="text-emerald-700 font-mono">${data.vectors} Vectors in Local Index</span>
+          </div>
+          <p class="text-[11px] text-emerald-800">${data.detail}</p>`;
+      } catch (e) {
+        statusBox.innerHTML = `<div class="text-rose-700 font-semibold">Backend unavailable. Start the NetAudit backend and try again.</div>`;
+      }
+    }
+
+    async function confirmActiveLearning() {
+      const selected = document.getElementById('activeLearnSelect').value;
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/active-learning/bind`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({command:'system defense-mode strict-quarantine', target:selected})
+        });
+        const data = await res.json();
+        alert(`[Active Learning Dynamic Persistence]\\n\\n${data.message}\\n\\nBackend registry updated without code redeployment.`);
+      } catch (e) {
+        alert('Backend unavailable. Start RUN_NETAUDIT_AI.bat first.');
+      }
+    }
+
+    async function triggerFullAudit() {
+      showTab('audit-view');
+      const config = document.getElementById('rawConfigEditor').value;
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/audit`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({vendor: currentVendor, config})
+        });
+        const data = await res.json();
+        applyBackendAudit(data);
+      } catch (e) {
+        loadVendorSample(currentVendor);
+        alert('Backend unavailable. The sample view was loaded locally. Start RUN_NETAUDIT_AI.bat for live backend auditing.');
+      }
+    }
+
+    async function runLiveAudit() {
+      const config = document.getElementById('rawConfigEditor').value;
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/audit`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({vendor: currentVendor, config})
+        });
+        const data = await res.json();
+        applyBackendAudit(data);
+      } catch (e) {
+        alert('Backend unavailable. Start RUN_NETAUDIT_AI.bat first.');
+      }
+    }
+
+    function applyBackendAudit(data) {
+      if (data.ast_text) document.getElementById('astTreeViewer').innerText = data.ast_text;
+      document.getElementById('yangJsonViewer').innerText = JSON.stringify(data.yang, null, 2);
+      document.getElementById('cfgLinesBadge').innerText = `Line count: ${data.line_count}`;
+      document.getElementById('astScopesCount').innerText = `${data.ast_scopes} Identified`;
+      document.getElementById('yangKeyCount').innerText = `${data.yang_key_count} Normalized`;
+      renderAuditFindings({
+        os: data.os, hostname: data.hostname,
+        yang: data.yang, violations: data.violations
+      });
+      document.getElementById('dagCliOutput').innerText = data.dag_runbook || document.getElementById('dagCliOutput').innerText;
+    }
+  </script>
+</body>
+</html>
